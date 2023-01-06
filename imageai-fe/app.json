@@ -18,7 +18,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Give Expo experiences permission to access your photos",
+        "NSCameraUsageDescription": "This app uses the camera to scan barcodes on event tickets.",
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -29,5 +33,13 @@
     "web": {
       "favicon": "./assets/favicon.png"
     }
-  }
+  },
+  "plugins": [
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "The app accesses your photos to let you share them with your friends."
+      }
+    ]
+  ]
 }
