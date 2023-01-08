@@ -62,7 +62,7 @@ function ImageSelector() {
       method: "PUT",
       body: imageBody,
     });
-    console.log("result", result);
+    console.log("result", JSON.stringify(result));
 
     // const data = {
     //   key: "QG4CnkidFlqlYIVXVynUEPLKd9JuUiYLRwghDwIzxf1mBDAbSNZngxGqDHhy",
