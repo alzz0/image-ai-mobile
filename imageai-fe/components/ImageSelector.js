@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
 
 function ImageSelector() {
   const [images, setImages] = useState([]);
@@ -25,28 +26,98 @@ function ImageSelector() {
       // allowsEditing: true,
       allowsMultipleSelection: true,
       selectionLimit: selectionAmount,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 1,
     });
     setIsLoading(false);
     for (let i = 0; i < result.assets.length; i++) {
       let asset = result.assets[i];
+      console.log("asset", asset);
       if (!result.canceled && asset.uri) {
+        // const data = {
+        //   uri: asset.ui,
+        //   fileName: asset.fileName,
+        //   fileType: asset.type,
+        //   type: "profileAvatars",
+        // };
         setImages((prevState) => [...prevState, asset.uri]);
       }
     }
   };
 
+  const uploadImages = async () => {
+    const url =
+      "https://yntq8h8ne9.execute-api.us-east-1.amazonaws.com/dev/presigned";
+    const testImage = images[0];
+    const resp = await fetch(testImage);
+    const imageBody = await resp.blob(); // conv uri to blob
+
+    const presignedurl = await axios
+      .get(url, { params: { contentType: resp._bodyBlob.type } })
+      .then((res) => {
+        return res.data;
+      });
+    // const key = presignedurl.key;
+    const result = await fetch(presignedurl.signedUrl, {
+      method: "PUT",
+      body: imageBody,
+    });
+    console.log("result", result);
+
+    // const data = {
+    //   key: "QG4CnkidFlqlYIVXVynUEPLKd9JuUiYLRwghDwIzxf1mBDAbSNZngxGqDHhy",
+    //   model_id: "midjourney",
+    //   prompt: "mdjrny-v4 style space",
+    //   negative_prompt: null,
+    //   init_image:
+    //     "https://imagebucket-imageai.s3.amazonaws.com/80549d48-58b3-4f4b-9bb8-351d84b4f412-0.png",
+    //   width: "512",
+    //   height: "512",
+    //   samples: "1",
+    //   num_inference_steps: "30",
+    //   guidance: null,
+    //   strength: null,
+    //   seed: null,
+    //   webhook: null,
+    //   track_id: null,
+    //   scheduler: "EulerAncestralDiscreteScheduler",
+    // };
+    // axios
+    //   .post("https://stablediffusionapi.com/api/v3/dreambooth/img2img", data)
+    //   .then((res) => {
+    //     console.log("res::", res);
+    //   })
+    //   .catch(console.log);
+  };
+
+  function deleteImage(image) {
+    if (images.includes(image)) {
+      const filteredArrayOfImages = images.filter((img) => {
+        return img !== image;
+      });
+      setImages(filteredArrayOfImages);
+    }
+  }
+
   return (
     <FlatList
       data={images}
       renderItem={({ item }) => {
-        console.log("item", item);
         return (
-          <Image
-            source={{ uri: item }}
-            style={{ width: width / 2, height: 250 }}
-          />
+          <View>
+            <Text onPress={() => deleteImage(item)} style={styles.deleteBtn}>
+              X
+            </Text>
+            <Image
+              source={{ uri: item }}
+              style={{ width: width / 2, height: 250 }}
+            />
+            {images && (
+              <View>
+                <Button title="Upload Images" onPress={uploadImages} />
+              </View>
+            )}
+          </View>
         );
       }}
       numColumns={2}
@@ -73,5 +144,16 @@ function ImageSelector() {
     />
   );
 }
+const styles = StyleSheet.create({
+  deleteBtn: {
+    zIndex: 2,
+    color: "red",
+    position: "absolute",
+    left: 0,
+    padding: 10,
+    backgroundColor: "blue",
+    top: 0,
+  },
+});
 
 export default ImageSelector;

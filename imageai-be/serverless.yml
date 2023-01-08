@@ -7,7 +7,72 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs14.x
+  environment:
+    # user_pool_id: { Ref: UserPool }
+    # client_id: { Ref: UserClient }
+    # user_table: {Ref: usersTable }
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminInitiateAuth
+        - cognito-idp:AdminCreateUser
+        - cognito-idp:AdminSetUserPassword
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:PostItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchGetItem
+        - s3:PutObject
+        - s3:GetObject
+        - s3:DeleteObject
+        - s3:GetBucketLocation
+        - s3:ListObjects
+        - s3:ListBucketVersions
+        - s3:ListBucketMultipartUploads
+      Resource: "*"
 
 functions:
-  hello:
-    handler: handler.hello
+  uploadImages:
+    handler: upload/uploadimages.handler
+    events: 
+      - http:
+          path: uploadimages
+          method: post
+          cors: true
+
+  generatePresignedUrl:
+    handler: presignedurl/preSignedUrl.handler
+    environment:
+      BUCKET_NAME: !Ref ImageBucket
+    events:
+      - http:
+          path: presigned
+          method: get
+
+resources:
+  Resources:
+    ImageBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: imagebucket-imageai
+        # PublicAccessBlockConfiguration:
+        #   BlockPublicAcls: true
+        #   BlockPublicPolicy: true
+        #   IgnorePublicAcls: true
+        #   RestrictPublicBuckets: true
+
+    postImageBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref ImageBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Action:
+                - "s3:GetObject"
+              Effect: Allow
+              Principal: "*"
+              Resource: "arn:aws:s3:::imagebucket-imageai/*"
